@@ -17,6 +17,8 @@
 #include <math.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <time.h>       // for clock_t, clock(), CLOCKS_PER_SEC
+#include <unistd.h>     // for sleep()
 
 
 /////////////////////////// Defining constants //////////////////////////
@@ -310,12 +312,14 @@ int max(int num1, int num2){
 
 unsigned int rotate_l(unsigned int x, unsigned int bit){
 	// implementing rotate with two shifts and OR
+	// insider modulu
 	return (((x << bit) | (x >> (32-bit)))%mod);
 }
 
 
 unsigned int rotate_r(unsigned int x, unsigned int bit){
 	// implementing rotate with two shifts and OR
+	// insider modulu
 	return (((x >> bit) | (x << (32-bit)))%mod);
 }
 
@@ -351,16 +355,13 @@ void key_schedule(){
 		
 		L[(key_i+key_j)%CC]=rotate_l((lkj+ski)%mod,(key_A+key_B)%mod);
 		
+		if((key_i % 2) == 1){
+			key_j=(key_j+3)%(CC);
+		}else{
+			key_j=(key_j+2)%(CC);
+		}
 		key_i=(key_i+1)%(SIZE_S);
-		key_j=(key_j+1)%(CC);
-		// if((key_i % 2) == 1){
-		// }else{
-		// 	key_j=(key_j+2)%(CC);
-		// }
 	}
-	// for (i=1;i<=v;i++){
-	// 	printf("%d-", S[i]);
-	// }
 
 }
 
@@ -382,10 +383,10 @@ void zbits01_enc(){
 	/*************************
 	 *      Encryption       *
 	**************************/
-	printf("before init perm: %d,%d,%d,%d\n",A,B,C,D);
+	// printf("before init perm: %d,%d,%d,%d\n",A,B,C,D);
 	B=(B+S[0])%mod;
 	D=(D+S[1])%mod;
-	printf("after init perm: %d,%d,%d,%d\n",A,B,C,D);
+	// printf("after init perm: %d,%d,%d,%d\n",A,B,C,D);
 
 	for(r=1;r<=R;r++){
 
@@ -408,13 +409,13 @@ void zbits01_enc(){
 		B=C%mod;
 		C=D%mod;
 		D=temp%mod;
-		printf("after round %d: %d,%d,%d,%d\n",r,A,B,C,D);
+		// printf("after round %d: %d,%d,%d,%d\n",r,A,B,C,D);
 		do_checks(A, B, C, D);
 	}
 
 	A=(A+S[2*R+2])%mod; // B of last round
 	C=(C+S[2*R+3])%mod; // D of last round
-	printf("after final perm: %d,%d,%d,%d\n",A,B,C,D);
+	// printf("after final perm: %d,%d,%d,%d\n",A,B,C,D);
 
 }
 
@@ -436,10 +437,10 @@ void zbits01_dec(){
 	/*************************
 	 *      Decryption       *
 	**************************/
-	printf("before dec-init perm: %d,%d,%d,%d\n",A,B,C,D);
+	// printf("before dec-init perm: %d,%d,%d,%d\n",A,B,C,D);
 	A=(A-S[2*R+2])%mod;
 	C=(C-S[2*R+3])%mod;
-	printf("after dec init-perm: %d,%d,%d,%d\n",A,B,C,D);
+	// printf("after dec init-perm: %d,%d,%d,%d\n",A,B,C,D);
 
 	for(r=R;r>=1;r--){
 		temp=D%mod;
@@ -462,12 +463,12 @@ void zbits01_dec(){
 		C=(rotate_r((C-S[2*r+1])%mod, (t & 0x1f))^u);
 		A=(rotate_r((A-S[2*r])%mod, (u & 0x1f))^t);
 
-		printf("after round %d of dec, %d,%d,%d,%d\n",r,A,B,C,D);
+		// printf("after round %d of dec, %d,%d,%d,%d\n",r,A,B,C,D);
 
 	}
 	D=(D-S[1])%mod;
 	B=(B-S[0])%mod;
-	printf("after dec final-perm: %d,%d,%d,%d\n",A,B,C,D);
+	// printf("after dec final-perm: %d,%d,%d,%d\n",A,B,C,D);
 
 }
 
@@ -551,7 +552,7 @@ void read_input_and_init(){
 		L[c]=(L[c]|(text<< (b%(W/8)* 8)));
 		b++;
 		keybit=keybit+8;
-		printf("-> c is %d, b is %d, keybit is %d\n", c, b, keybit);
+		// printf("-> c is %d, b is %d, keybit is %d\n", c, b, keybit);
 	}
 
 	CC=c+1;
@@ -633,11 +634,24 @@ int main(int argc, char** argv){
 	fscanf(input, "%s", keyword);
 
 	read_input_and_init();
-
+	
+	double time_spent = 0.0;
+	clock_t begin = clock();
 	key_schedule();
+	clock_t end = clock();
+	time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
+
+	// printf("key schedule time spent: %f\n", time_spent);
 
 	if(usage==0){
+		time_spent = 0.0;
+		begin = clock();
+		
 		zbits01_enc();
+
+		end = clock();
+		time_spent += (double)(end - begin) / CLOCKS_PER_SEC;
+		// printf("encryption time spent: %f\n", time_spent);
 	}/*end of if: usage==0*/
 	else{
 		zbits01_dec();
