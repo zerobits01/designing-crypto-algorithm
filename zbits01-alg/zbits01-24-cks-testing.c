@@ -24,7 +24,7 @@
 #define true 1
 #define false 0
 #define W 24 // input size 24*4 = 96bits
-#define R 19 // Rounds
+#define R 14 // Rounds
 #define LW 5 // this is floor of log(24)
 #define SIZE_S R*2+4 // states size
 
@@ -409,7 +409,7 @@ void zbits01_enc(){
 		C=D%mod;
 		D=temp%mod;
 		printf("after round %d: %d,%d,%d,%d\n",r,A,B,C,D);
-		// do_checks(A, B, C, D);
+		do_checks(A, B, C, D);
 	}
 
 	A=(A+S[2*R+2])%mod; // B of last round
