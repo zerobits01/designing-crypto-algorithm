@@ -1,3 +1,3 @@
 Decryption
-ciphertext: e0 17 b7 d1 ab c1 80 21 27 c8 e9 d8
-userkey: 00 00 00 00 00 00 10 00 01 00 01 01
+ciphertext: db ad 22 83 da 51 de 15 b1 b3 9e d8
+userkey: 10 00 00 00 00 00 10 00 01 00 01 01
